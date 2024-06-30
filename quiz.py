@@ -1,66 +1,57 @@
 import streamlit as st
-import numpy as np
+import random
+from PIL import Image
 
-st.title("英単語クイズ")
-
-biginner_word_pairs = {
-    "Apple": "りんご",
-    "Dog": "犬",
-    "Cat": "猫",
-    "Book": "本",
-    "School": "学校",
-    "Car": "車",
-    "Ball": "ボール",
-    "Sun": "太陽",
-    "Tree": "木",
-    "Fish": "魚"
+# 漢字と花の名前の辞書
+KANJI_YOMI = {
+    "紫陽花": "アジサイ",
+    '向日葵': 'ヒマワリ',
+    '蒲公英': 'タンポポ',
+    '竜胆': 'リンドウ',
+    '仏桑花':'ハイビスカス',
+    '花車':'ガーベラ',
+    '石楠花':'シャクナゲ',
+    '風信子':'ヒヤシンス',
+    '木春菊':'マーガレット',
+    '孔雀草':'マリーゴールド'
 }
 
-intermediate_words_pairs = {
-    "Science": "科学",
-    "History": "歴史",
-    "Mathematics": "数学",
-    "Geography": "地理",
-    "Literature": "文学",
-    "Biology": "生物学",
-    "Physics": "物理学",
-    "Chemistry": "化学",
-    "Economics": "経済学",
-    "Philosophy": "哲学"
-}
+def get_random_kanji():
+    return random.choice(list(KANJI_YOMI.keys()))
 
-advanced_words_pairs = {
-    "Ephemeral": "儚い",
-    "Ubiquitous": "遍在する",
-    "Ostentatious": "派手な",
-    "Equanimity": "平静",
-    "Magnanimous": "寛大な",
-    "Sagacious": "賢明な",
-    "Perspicacious": "洞察力のある",
-    "Tenacious": "粘り強い",
-    "Assiduous": "勤勉な",
-    "Perfunctory": "形式的な"
-}
+def change_session():
+  st.session_state["input"]=""
+  st.session_state.status=0
 
+st.title("漢字クイズ 花の名前わかるかな？")
 
-quiz_data_set = {
-  "初級": biginner_word_pairs,
-  "中級": intermediate_words_pairs,
-  "上級": advanced_words_pairs
-}
+if 'status' not in st.session_state: 
+	st.session_state.status = 0 
 
-level = st.sidebar.radio("レベルを選択", ["初級","中級","上級"])
-word_pairs = quiz_data_set[level]
+if st.session_state.status == 0: 
+    current_kanji = get_random_kanji()
+    st.session_state.corrent_kanji = current_kanji
+else:
+    current_kanji = st.session_state.corrent_kanji 
 
-if st.button("出題"):
-  index = np.random.randint(0,9)
-  english_word = list(word_pairs.keys())[index]
-  st.markdown(f"## {english_word}")
+st.write(f"## {current_kanji}")
+st.session_state.user_input = st.text_input("花の名前をカタカナで入力してEnterを押してね",key= "input")
 
-  with st.expander("解答を見る"):
-    japanese_word = word_pairs[english_word]
-    st.write(f"## {japanese_word}")
+if st.session_state.status == 0: 
+    st.session_state.status = 1
 
-if st.button("次の問題へ"):
-  placeholder = st.empty()
-  placeholder.empty()
+if st.button("答え"):
+    correct_yomi = KANJI_YOMI[st.session_state.corrent_kanji]
+    if st.session_state.user_input == correct_yomi:
+        st.success("正解！")
+        img = Image.open(correct_yomi+'.jpg')
+        st.image(img)
+        st.session_state.status=2
+    else:
+        st.error("残念！！")
+        st.write(f"正解は {correct_yomi}だよ。")
+        st.session_state.status=2
+
+if st.session_state.status == 2 :
+    st.button("次の問題へ",on_click=change_session)
+
